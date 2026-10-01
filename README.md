@@ -1,159 +1,127 @@
-# Turborepo starter
+# VectorNote AI
 
-This Turborepo starter is maintained by the Turborepo core team.
+An AI-powered notes application built to explore modern AI and backend engineering concepts including semantic search, RAG, vector embeddings, caching, and asynchronous background processing.
 
-## Using this example
+The application stores notes in PostgreSQL and generates 384-dimensional embeddings locally using Ollama and the `all-minilm` model. Embeddings are stored and searched using pgvector, enabling semantic retrieval based on meaning rather than exact keyword matching.
 
-Run the following command:
+Relevant notes are retrieved and provided as context to a Groq-hosted LLM to generate answers using a Retrieval-Augmented Generation (RAG) pipeline.
 
-```sh
-npx create-turbo@latest
+Embedding generation is handled asynchronously using BullMQ and Redis, allowing notes to be created immediately while vector processing happens in a separate worker process. Redis is also used for caching repeated AI queries.
+
+## Tech Stack
+
+- Next.js + TypeScript
+- Express.js
+- PostgreSQL / Neon
+- Prisma
+- pgvector
+- Ollama + all-minilm
+- Groq + Vercel AI SDK
+- Redis
+- BullMQ
+- Turborepo
+- Docker
+
+## Current Architecture
+
+Note creation:
+
+User → Express API → PostgreSQL → BullMQ → Redis → Worker → Ollama → pgvector
+
+AI question answering:
+
+Question → Ollama embedding → pgvector semantic search → relevant notes → Groq LLM → answer
+
+## Current Features
+
+- Create and manage notes
+- Local vector embedding generation
+- Semantic note search
+- RAG-based question answering
+- Redis response caching
+- Asynchronous embedding generation with BullMQ
+- Separate API and worker processes
+- Turborepo-based monorepo architecture
+
+## Planned
+
+- Streaming AI chat interface
+- AI tool calling for creating, editing, searching, and deleting notes
+- PDF/document ingestion and chunk-based RAG
+- Dockerized deployment
+
+## Architecture
+
+VectorNote AI separates synchronous API operations from background AI processing.
+
+### Note Creation & Embedding Pipeline
+
+```mermaid
+flowchart LR
+    U[User] --> F[Next.js Frontend]
+    F --> API[Express.js API]
+
+    API --> DB[(PostgreSQL / Neon)]
+    API --> Q[BullMQ Queue]
+
+    Q --> R[(Redis)]
+    R --> W[BullMQ Worker]
+
+    W --> O[Ollama]
+    O --> M[all-minilm]
+    M --> E[384-d Embedding]
+
+    E --> PG[pgvector]
+    PG --> DB
 ```
 
-## What's inside?
+When a note is created, the API stores the note immediately and queues an embedding-generation job. A separate BullMQ worker processes the job, generates the vector embedding using Ollama and `all-minilm`, and updates the note asynchronously.
 
-This Turborepo includes the following packages/apps:
+### RAG Question Answering Pipeline
 
-### Apps and Packages
+```mermaid
+flowchart LR
+    U[User Question] --> API[Express.js API]
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+    API --> C{Redis Cache}
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+    C -->|Cache Hit| A[Return Cached Answer]
 
-### Utilities
+    C -->|Cache Miss| O[Ollama all-minilm]
+    O --> QE[Query Embedding]
 
-This Turborepo has some additional tools already setup for you:
+    QE --> V[(pgvector Semantic Search)]
+    V --> N[Relevant Notes]
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+    N --> L[Groq LLM]
+    L --> R[Generated Answer]
 
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+    R --> C2[Store Answer in Redis]
+    C2 --> U2[Return Answer]
 ```
 
-Without global `turbo`, use your package manager:
+The user's question is converted into an embedding using the same embedding model used for notes. pgvector performs semantic similarity search to retrieve the most relevant notes, which are passed to the Groq-hosted LLM as RAG context.
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm exec turbo build
-pnpm exec turbo build
+Redis is checked first to avoid unnecessarily repeating expensive AI operations for previously answered queries.
+
+### Process Architecture
+
+```mermaid
+flowchart TB
+    T[Turbo / Development Command]
+
+    T --> API[Node Process 1<br/>Express.js API]
+    T --> W[Node Process 2<br/>BullMQ Workers]
+
+    API --> REDIS[(Redis)]
+    W --> REDIS
+
+    API --> DB[(PostgreSQL / Neon)]
+    W --> DB
+
+    W --> O[Ollama<br/>all-minilm]
+
+    API --> G[Groq API]
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+The Express API and BullMQ workers run as separate Node.js processes. Turborepo orchestrates the development tasks, while Redis provides both caching and BullMQ queue infrastructure.

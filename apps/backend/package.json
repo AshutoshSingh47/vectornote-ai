@@ -1,0 +1,40 @@
+{
+  "name": "@repo/backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "types": "src/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "worker:dev": "tsx watch src/workers/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@ai-sdk/groq": "^4.0.48",
+    "@repo/db": "workspace:*",
+    "ai": "^7.0.113",
+    "bullmq": "^6.3.9",
+    "cors": "^2.8.6",
+    "dotenv": "catalog:",
+    "express": "^5.2.1",
+    "redis": "^6.2.1"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}
