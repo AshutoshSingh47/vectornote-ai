@@ -1,11 +1,13 @@
 import { CreateNoteModal } from "@/components/create-note-modal";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { SparklesIcon } from "lucide-react";
+import Link from "next/link";
 
 interface Note {
   id: string;
@@ -48,7 +50,18 @@ export default async function Home() {
 
     return (
       <div className="flex w-full flex-col gap-6 p-5 font-sans">
-        <CreateNoteModal />
+        <div className="flex gap-2 self-end">
+          <CreateNoteModal />
+          <Link
+            href="/ai"
+            children={
+              <Button variant="default">
+                <SparklesIcon />
+                Ask AI
+              </Button>
+            }
+          />
+        </div>
 
         {data.length > 0 ? (
           <div className="flex flex-wrap gap-10">
