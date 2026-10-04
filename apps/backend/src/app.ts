@@ -2,8 +2,6 @@ import cors from "cors";
 import express from "express";
 import askRoutes from "./routes/ask.routes";
 import notesRoutes from "./routes/notes.routes";
-import { redis } from "./lib/redis-connection";
-import { queue } from "./lib/bullmq-connection";
 
 export const app = express();
 

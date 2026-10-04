@@ -1,5 +1,5 @@
 import { groq } from "@ai-sdk/groq";
-import { streamText } from "ai";
+import { smoothStream, streamText } from "ai";
 import { generateEmbedding } from "./embedding.service";
 import { SearchResult, searchSimilarNotes } from "./notes.service";
 import { redis } from "../lib/redis-connection";
@@ -12,7 +12,7 @@ type AskStreamResult =
   | { cached: true; answer: string; sources: SearchResult[] }
   | {
       cached: false;
-      textStream: AsyncIterable<string>;
+      textStream: ReadableStream<string>;
       sources: SearchResult[];
     };
 
@@ -56,6 +56,7 @@ export async function answerQuestionStream(
       ${query}
 
       If the answer is not present in the notes, say you don't know.`,
+    experimental_transform: smoothStream({ delayInMs: 20, chunking: "word" }),
     onEnd: async ({ text }) => {
       await cacheAnswer(query, { answer: text, sources: notes });
     },

@@ -1,6 +1,7 @@
 "use client";
 
 import { PlusIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ChangeEvent, useState } from "react";
 import { Button } from "./ui/button";
 import {
@@ -17,8 +18,6 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { toast } from "./ui/toast";
-import { useRouter } from "next/navigation";
-import { Separator } from "./ui/separator";
 
 export function CreateNoteModal() {
   const router = useRouter();
@@ -61,6 +60,7 @@ export function CreateNoteModal() {
 
       router.refresh();
     } catch (error) {
+      console.error("Error: ", error);
       toast.add({
         title: "Something went wrong",
         description: "Unable to connect to the server.",

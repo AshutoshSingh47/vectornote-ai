@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { TextStreamChatTransport } from "ai";
+import { useState } from "react";
 
 import {
   Conversation,
@@ -19,11 +19,10 @@ import {
 
 import {
   PromptInput,
-  PromptInputTextarea,
   PromptInputSubmit,
+  PromptInputTextarea,
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
-import { BotIcon } from "lucide-react";
 
 export default function NotesChat() {
   const [input, setInput] = useState("");

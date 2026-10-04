@@ -18,6 +18,16 @@
       "cache": false,
       "persistent": true
     },
+    "start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true
+    },
+    "worker:start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true
+    },
     "worker:dev": {
       "cache": false,
       "persistent": true
