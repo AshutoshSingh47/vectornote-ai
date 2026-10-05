@@ -1,8 +1,8 @@
-const OLLAMA_URL = "http://localhost:11434/api/embed";
+const OLLAMA_URL = process.env.OLLAMA_URL ?? "http://localhost:11434";
 const EMBEDDING_DIMENSIONS = 384; // all-minilm output size, must match the DB vector column
 
 export async function generateEmbedding(content: string): Promise<number[]> {
-  const response = await fetch(OLLAMA_URL, {
+  const response = await fetch(`${OLLAMA_URL}/api/embed`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model: "all-minilm", input: content }),

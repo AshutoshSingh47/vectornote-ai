@@ -1,0 +1,17 @@
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/.venv
+
+.git
+.gitignore
+
+.env
+.env.*
+!.env.example
+
+*.log
+
+coverage
+.pnpm-store
